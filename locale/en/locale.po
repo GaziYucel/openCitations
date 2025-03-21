@@ -1,0 +1,35 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2025-03-01T23:59:59+00:00\n"
+"PO-Revision-Date: 2025-07-01T23:59:59+00:00\n"
+"Language: \n"
+
+msgid "plugins.generic.openCitations.displayName"
+msgstr "Open Citations Plugin"
+
+msgid "plugins.generic.openCitations.description"
+msgstr "Plugin depositing structured citations to Open Citations Crowd Sourcing (https://github.com/opencitations/crowdsourcing)."
+
+msgid "plugins.generic.openCitations.settings.open_citations_title"
+msgstr "Open Citations CROCI "
+"<a href='https://github.com/opencitations/crowdsourcing' "
+"target='_blank'><i class='fa fa-question-circle' aria-hidden='true'></i></a>"
+
+msgid "plugins.generic.openCitations.settings.open_citations_owner"
+msgstr "Github Owner for OpenCitations deposits"
+
+msgid "plugins.generic.openCitations.settings.open_citations_repository"
+msgstr "Github Repository name for OpenCitations deposits"
+
+msgid "plugins.generic.openCitations.settings.open_citations_token"
+msgstr "Github Token for OpenCitations deposits"
+
+msgid "plugins.generic.openCitations.settings.missing_logon_credentials"
+msgstr "Github logon credentials are not filled in. Please fill in your credentials on the plugin settings page."
