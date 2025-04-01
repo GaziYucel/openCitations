@@ -1,0 +1,49 @@
+<?php
+
+/**
+ * @file classes/jobs/DepositJob.php
+ *
+ * Copyright (c) 2025 Simon Fraser University
+ * Copyright (c) 2025 John Willinsky
+ * Distributed under the GNU GPL v3. For full terms see the file docs/COPYING.
+ *
+ * @class DepositJob
+ *
+ * @brief Job for depositing.
+ */
+
+namespace APP\plugins\generic\openCitations\classes\jobs;
+
+use APP\facades\Repo;
+use PKP\job\exceptions\JobException;
+use PKP\jobs\BaseJob;
+
+class DepositJob extends BaseJob
+{
+    protected int $publicationId;
+    public string $owner;
+    public string $repository;
+    public string $token;
+
+    public function __construct(int $publicationId, string $owner, string $repository, string $token)
+    {
+        parent::__construct();
+
+        $this->publicationId = $publicationId;
+        $this->owner = $owner;
+        $this->repository = $repository;
+        $this->token = $token;
+    }
+
+    public function handle(): void
+    {
+        $publication = Repo::publication()->get($this->publicationId);
+
+        if (!$this->publicationId || !$publication) {
+            throw new JobException(JobException::INVALID_PAYLOAD);
+        }
+
+        $deposit = new Deposit($this->publicationId, $this->owner, $this->repository, $this->token);
+        $deposit->execute();
+    }
+}
