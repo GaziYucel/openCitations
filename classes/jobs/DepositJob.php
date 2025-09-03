@@ -36,7 +36,7 @@ class DepositJob extends BaseJob
     {
         $publication = Repo::publication()->get($this->publicationId);
 
-        if (!$this->publicationId || !$publication) {
+        if (!$publication) {
             throw new JobException(JobException::INVALID_PAYLOAD);
         }
 

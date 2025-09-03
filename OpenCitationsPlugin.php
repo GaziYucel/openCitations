@@ -31,10 +31,14 @@ use PKP\submission\PKPSubmission;
 
 class OpenCitationsPlugin extends GenericPlugin
 {
+    private int $contextId;
+
     public function register($category, $path, $mainContextId = null): bool
     {
         if (parent::register($category, $path, $mainContextId)) {
             if ($this->getEnabled()) {
+                $this->contextId = ($mainContextId === null) ? $this->getCurrentContextId() : $mainContextId;
+
                 $schema = new PluginSchema();
                 Hook::add('Schema::get::publication', [$schema, 'addToPublication']);
 
@@ -80,10 +84,7 @@ class OpenCitationsPlugin extends GenericPlugin
         /** @var Publication $newPublication */
         $newPublication = $args[0];
 
-        $token = $this->getSetting(
-            $this->request->getContext()->getId(),
-            Constants::token
-        );
+        $token = $this->getSetting($this->contextId, Constants::token);
 
         if (empty($token)) {
             $notificationManager = new NotificationManager();
@@ -98,13 +99,13 @@ class OpenCitationsPlugin extends GenericPlugin
         if (
             $newPublication->getData('status') !== PKPSubmission::STATUS_PUBLISHED ||
             !empty($newPublication->getData(Constants::depositedUrlName)) ||
-            empty($newPublication->getStoredPubId('doi'))
+            empty($newPublication->getStoredPubId('doi')) ||
+            empty($newPublication->getData('citations'))
         ) {
             return;
         }
 
-        dispatch(new DepositJob($newPublication->getId(), $token))
-            ->delay(now()->addSeconds(60));
+        dispatch(new DepositJob($newPublication->getId(), $token));
     }
 }
 

@@ -49,7 +49,7 @@ class Form extends PKPForm
 
         $contextId = $context
             ? $context->getId()
-            : Application::CONTEXT_SITE;
+            : Application::SITE_CONTEXT_ID;
 
         foreach ($this->settings as $key) {
             $this->setData($key,

@@ -22,32 +22,26 @@ use APP\plugins\generic\openCitations\classes\Constants;
 use APP\publication\Publication;
 use APP\submission\Submission;
 use Author;
+use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use PKP\citation\Citation;
 use PKP\context\Context;
+use PKP\job\exceptions\JobException;
 
 class Deposit
 {
     protected ?int $publicationId = null;
     protected ?Publication $publication = null;
-    protected ?string $locale = null;
-
-    protected ?int $submissionId = null;
     protected ?Submission $submission = null;
-
-    protected ?int $contextId = null;
     protected ?Context $context = null;
-
-    protected ?int $issueId = null;
     protected ?Issue $issue = null;
-
     protected ?array $citations = null;
-
     protected string $domain = '';
+    protected ?string $locale = null;
     protected string $publicationDoi = '';
 
-    public string $token;
+    protected string $token;
 
     protected string $defaultArticleType = 'journal article';
     protected array $metaDataSchema = ['id', 'title', 'authors', 'pubDate', 'venue', 'volume', 'issue', 'page', 'type', 'publisher', 'editor'];
@@ -67,15 +61,12 @@ class Deposit
      */
     public function execute(): void
     {
-        $this->locale = $this->publication->getData('locale');
-        $this->submissionId = $this->publication->getData('submissionId');
-        $this->submission = Repo::submission()->get($this->submissionId);
-        $this->contextId = $this->submission->getData('contextId');
-        $this->context = Application::getContextDAO()->getById($this->contextId);
-        $this->issueId = $this->submission->getData('issueId');
+        $this->submission = Repo::submission()->get($this->publication->getData('submissionId'));
+        $this->context = Application::getContextDAO()->getById($this->submission->getData('contextId'));
         $this->issue = Repo::issue()->get($this->publication->getData('issueId'));
         $this->citations = Repo::citation()->getByPublicationId($this->publicationId);
         $this->domain = $_SERVER['SERVER_NAME'];
+        $this->locale = $this->publication->getData('locale');
 
         $title = 'deposit' . ' ' . $this->domain . ' ' . 'doi:' . $this->publicationDoi;
 
@@ -92,7 +83,7 @@ class Deposit
         if ($githubIssueId) {
             $this->publication->setData(
                 Constants::depositedUrlName,
-                Constants::githubUrl . '/' . Constants::owner . '/' . Constants::repository . '/issues' . $githubIssueId
+                Constants::githubUrl . '/' . Constants::owner . '/' . Constants::repository . '/issues/' . $githubIssueId
             );
             Repo::publication()->edit($this->publication, []);
         }
@@ -108,7 +99,7 @@ class Deposit
         $title = $this->publication->getData('title')[$this->locale];
 
         $authors = '';
-        foreach ($this->publication->getData('authors') as $index => $author) {
+        foreach ($this->publication->getData('authors') as $author) {
             /** @var Author $author */
             $authors .= !empty($author->getFamilyName($this->locale)) ? $author->getFamilyName($this->locale) . ', ' : '';
             $authors .= !empty($author->getGivenName($this->locale)) ? $author->getGivenName($this->locale) : '';
@@ -164,9 +155,8 @@ class Deposit
             $authors = '';
             if (!empty($citation->getData('authors')) && $citation->getData('authors') !== null) {
                 foreach ($citation->getData('authors') as $author) {
-                    $authors .= empty($author['orcid'])
-                        ? $author['displayName']
-                        : $author['familyName'] . ', ' . $author['givenName'] . ' ' . '[orcid:' . str_replace(Constants::pidPrefix['orcid'], '', $author['orcid']) . ']';
+                    $authors .= $author['familyName'] . ' ' . $author['givenName'];
+                    $authors .= !empty($author['orcid']) ? ' ' . '[orcid:' . str_replace(Constants::pidPrefix['orcid'], '', $author['orcid']) . ']' : '';
                     $authors .= '; ';
                 }
             }
@@ -279,8 +269,8 @@ class Deposit
                 return $result['number'];
             }
 
-        } catch (GuzzleException $e) {
-            error_log(__METHOD__ . ' ' . $e->getMessage());
+        } catch (GuzzleException|Exception $e) {
+            throw new JobException($e->getMessage());
         }
 
         return '';
