@@ -15,9 +15,6 @@
 
 namespace APP\plugins\generic\openCitations;
 
-use APP\core\Application;
-use APP\notification\Notification;
-use APP\notification\NotificationManager;
 use APP\plugins\generic\openCitations\classes\Constants;
 use APP\plugins\generic\openCitations\classes\jobs\DepositJob;
 use APP\plugins\generic\openCitations\classes\schemas\PluginSchema;
@@ -87,12 +84,7 @@ class OpenCitationsPlugin extends GenericPlugin
         $token = $this->getSetting($this->contextId, Constants::token);
 
         if (empty($token)) {
-            $notificationManager = new NotificationManager();
-            $notificationManager->createTrivialNotification(
-                Application::get()->getRequest()->getUser()->getId(),
-                Notification::NOTIFICATION_TYPE_SUCCESS,
-                array('contents' => __('plugins.generic.openCitations.settings.missingCredentials'))
-            );
+            error_log(__('plugins.generic.openCitations.settings.missingCredentials'));
             return;
         }
 

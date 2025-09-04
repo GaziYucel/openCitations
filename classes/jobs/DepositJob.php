@@ -22,7 +22,7 @@ use PKP\jobs\BaseJob;
 class DepositJob extends BaseJob
 {
     protected int $publicationId;
-    public string $token;
+    private string $token;
 
     public function __construct(int $publicationId, string $token)
     {

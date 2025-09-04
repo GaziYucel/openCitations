@@ -20,10 +20,8 @@ use APP\facades\Repo;
 use APP\issue\Issue;
 use APP\plugins\generic\openCitations\classes\Constants;
 use APP\publication\Publication;
-use APP\submission\Submission;
 use Author;
 use Exception;
-use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use PKP\citation\Citation;
 use PKP\context\Context;
@@ -31,29 +29,22 @@ use PKP\job\exceptions\JobException;
 
 class Deposit
 {
-    protected ?int $publicationId = null;
-    protected ?Publication $publication = null;
-    protected ?Submission $submission = null;
-    protected ?Context $context = null;
-    protected ?Issue $issue = null;
-    protected ?array $citations = null;
-    protected string $domain = '';
-    protected ?string $locale = null;
-    protected string $publicationDoi = '';
+    private Publication $publication;
+    private Context $context;
+    private Issue $issue;
+    private array $citations;
+    private string $locale;
 
-    protected string $token;
+    private string $token;
 
-    protected string $defaultArticleType = 'journal article';
-    protected array $metaDataSchema = ['id', 'title', 'authors', 'pubDate', 'venue', 'volume', 'issue', 'page', 'type', 'publisher', 'editor'];
-    protected array $relationsSchema = ['citing_id', 'cited_id'];
+    private string $defaultArticleType = 'journal article';
+    private array $metaDataSchema = ['id', 'title', 'authors', 'pubDate', 'venue', 'volume', 'issue', 'page', 'type', 'publisher', 'editor'];
+    private array $relationsSchema = ['citing_id', 'cited_id'];
 
     public function __construct(int $publicationId, string $token)
     {
-        $this->publicationId = $publicationId;
         $this->token = $token;
-
-        $this->publication = Repo::publication()->get($this->publicationId);
-        $this->publicationDoi = $this->publication->getStoredPubId('doi');
+        $this->publication = Repo::publication()->get($publicationId);
     }
 
     /**
@@ -61,14 +52,13 @@ class Deposit
      */
     public function execute(): void
     {
-        $this->submission = Repo::submission()->get($this->publication->getData('submissionId'));
-        $this->context = Application::getContextDAO()->getById($this->submission->getData('contextId'));
+        $this->context = Application::getContextDAO()->getById(
+            Repo::submission()->get($this->publication->getData('submissionId'))->getData('contextId'));
         $this->issue = Repo::issue()->get($this->publication->getData('issueId'));
-        $this->citations = Repo::citation()->getByPublicationId($this->publicationId);
-        $this->domain = $_SERVER['SERVER_NAME'];
+        $this->citations = Repo::citation()->getByPublicationId($this->publication->getId());
         $this->locale = $this->publication->getData('locale');
 
-        $title = 'deposit' . ' ' . $this->domain . ' ' . 'doi:' . $this->publicationDoi;
+        $title = 'deposit' . ' ' . $_SERVER['SERVER_NAME'] . ' ' . 'doi:' . $this->publication->getDoi();
 
         $body =
             '"' . implode('","', $this->metaDataSchema) . '"' . PHP_EOL .
@@ -94,7 +84,7 @@ class Deposit
      */
     private function getPublication(): array
     {
-        $id = 'doi:' . str_replace(Constants::pidPrefix['doi'], '', $this->publicationDoi);
+        $id = 'doi:' . str_replace(Constants::pidPrefix['doi'], '', $this->publication->getDoi());
 
         $title = $this->publication->getData('title')[$this->locale];
 
@@ -195,7 +185,7 @@ class Deposit
 
         foreach ($this->citations as $citation) {
             /** @var Citation $citation */
-            $citingId = 'doi:' . $this->publicationDoi;
+            $citingId = 'doi:' . $this->publication->getDoi();
 
             $citedId = !empty($citation->getData('doi')) ? 'doi:' . $citation->getData('doi') . ' ' : '';
             $citedId .= !empty($citation->getData('url')) ? $this->getUrl($citation->getData('url')) . ' ' : '';
@@ -232,16 +222,13 @@ class Deposit
     private function addIssue(string $title, string $body): string
     {
         try {
-            $client = new Client(
-                [
-                    'headers' => [
-                        'User-Agent' => Application::get()->getName(),
-                        'Accept' => 'application/vnd.github.v3+json',
-                        'Authorization' => 'token ' . $this->token
-                    ],
-                    'verify' => false
+            $client = Application::get()->getHttpClient([
+                'headers' => [
+                    'accept' => 'application/vnd.github.v3+json',
+                    'authorization' => 'token ' . $this->token,
+                    'mailto:' . $this->context->getContactEmail(),
                 ]
-            );
+            ]);
 
             $response = $client->request(
                 'POST',
@@ -268,9 +255,8 @@ class Deposit
             if (is_numeric($result['number']) && (string)$result['number'] !== '0') {
                 return $result['number'];
             }
-
         } catch (GuzzleException|Exception $e) {
-            throw new JobException($e->getMessage());
+            error_log(__METHOD__ . ' ' . $e->getMessage());
         }
 
         return '';
