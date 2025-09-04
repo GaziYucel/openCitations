@@ -1,7 +1,5 @@
-# openCitations
+# Open Citations Crowdsourcing Plugin
 
-Deposit citations to Open Citations Crowd Sourcing
+Deposit structured citations to Open Citations Crowdsourcing repository.
 
-# more information
-
-https://github.com/opencitations/crowdsourcing
+Please see the [Open Citations Crowdsourcing site](https://github.com/opencitations/crowdsourcing) for more information.
