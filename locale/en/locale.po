@@ -35,4 +35,5 @@ msgstr "Your Github Access Token"
 
 msgid "plugins.generic.openCitations.settings.missingCredentials"
 msgstr "Github logon credentials are not filled in for depositing Open Citations Crowdsourcing. "
-"Please fill in your credentials on the plugin settings page."
+"Please fill in your credentials on the plugin settings page. "
+"This job will be rescheduled to try again in {$days} days."

@@ -50,7 +50,7 @@ class Deposit
     /**
      * Process this external service
      */
-    public function execute(): void
+    public function execute(): bool
     {
         $this->context = Application::getContextDAO()->getById(
             Repo::submission()->get($this->publication->getData('submissionId'))->getData('contextId'));
@@ -76,7 +76,9 @@ class Deposit
                 Constants::githubUrl . '/' . Constants::owner . '/' . Constants::repository . '/issues/' . $githubIssueId
             );
             Repo::publication()->edit($this->publication, []);
+            return true;
         }
+        return false;
     }
 
     /**
@@ -222,18 +224,17 @@ class Deposit
     private function addIssue(string $title, string $body): string
     {
         try {
-            $client = Application::get()->getHttpClient([
-                'headers' => [
-                    'accept' => 'application/vnd.github.v3+json',
-                    'authorization' => 'token ' . $this->token,
-                    'mailto:' . $this->context->getContactEmail(),
-                ]
-            ]);
+            $client = Application::get()->getHttpClient();
 
             $response = $client->request(
                 'POST',
                 Constants::apiUrl . '/' . Constants::owner . '/' . Constants::repository . '/issues',
                 [
+                    'headers' => [
+                        'accept' => 'application/vnd.github.v3+json',
+                        'authorization' => 'token ' . $this->token,
+                        'mailto:' . $this->context->getContactEmail(),
+                    ],
                     'json' =>
                         [
                             'title' => $title,

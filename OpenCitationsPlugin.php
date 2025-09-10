@@ -78,26 +78,22 @@ class OpenCitationsPlugin extends GenericPlugin
      */
     public function addJob($hookName, $args): void
     {
-        /** @var Publication $newPublication */
-        $newPublication = $args[0];
-
-        $token = $this->getSetting($this->contextId, Constants::token);
-
-        if (empty($token)) {
-            error_log(__('plugins.generic.openCitations.settings.missingCredentials'));
-            return;
-        }
+        /** @var Publication $publication */
+        $publication = $args[0];
 
         if (
-            $newPublication->getData('status') !== PKPSubmission::STATUS_PUBLISHED ||
-            !empty($newPublication->getData(Constants::depositedUrlName)) ||
-            empty($newPublication->getStoredPubId('doi')) ||
-            empty($newPublication->getData('citations'))
+            $publication->getData('status') !== PKPSubmission::STATUS_PUBLISHED ||
+            !empty($publication->getData(Constants::depositedUrlName)) ||
+            empty($publication->getStoredPubId('doi')) ||
+            empty($publication->getData('citations'))
         ) {
             return;
         }
 
-        dispatch(new DepositJob($newPublication->getId(), $token));
+        dispatch(new DepositJob(
+            $this,
+            $publication->getId(),
+            $this->getSetting($this->contextId, Constants::token)));
     }
 }
 
