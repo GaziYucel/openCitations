@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE version SYSTEM "../../../lib/pkp/dtd/pluginVersion.dtd">
+<!--
+ * @file plugins/generic/citationManager/version.xml
+ *
+ * Copyright (c) 2025 Simon Fraser University
+ * Copyright (c) 2025 John Willinsky
+ * Distributed under the GNU GPL v3. For full terms see the file docs/COPYING.
+ *
+ * @class OpenCitationsPlugin
+ * @ingroup plugins_generic_openCitations
+ *
+ * @brief plugin's information
+   -->
+
+<version>
+    <application>openCitations</application>
+    <type>plugins.generic</type>
+    <release>3.6.0.0</release>
+    <date>2025-01-01</date>
+    <class>OpenCitationsPlugin</class>
+</version>
